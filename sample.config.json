@@ -1,0 +1,9 @@
+{
+  "repositories": [
+    {
+      "name": "Some_Name",
+      "location": "/the/path/to/Some_Name"
+    }
+  ],
+  "poll_interval": 10
+}
