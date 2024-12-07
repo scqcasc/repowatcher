@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
+	"path/filepath"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 )
 
@@ -27,6 +31,30 @@ type Config struct {
 	PollInterval int          `json:"poll_interval"`
 }
 
+var (
+	config     Config
+	configLock sync.RWMutex
+)
+
+func loadConfig(configPath string) error {
+	file, err := os.Open(configPath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	var newConfig Config
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&newConfig); err != nil {
+		return err
+	}
+
+	configLock.Lock()
+	config = newConfig
+	configLock.Unlock()
+	return nil
+}
+
 func getRepoState(repo Repository) string {
 	cmd := exec.Command("git", "status", "--porcelain=v1", "--branch")
 	cmd.Dir = repo.Location
@@ -36,21 +64,33 @@ func getRepoState(repo Repository) string {
 	}
 
 	status := string(output)
-	if strings.Contains(status, "ahead") {
+	lines := strings.Split(status, "\n")
+
+	// Check for branch ahead/behind state
+	if len(lines) > 0 && strings.Contains(lines[0], "ahead") {
 		return "ahead"
 	}
-	if strings.Contains(status, "behind") {
+	if len(lines) > 0 && strings.Contains(lines[0], "behind") {
 		return "behind"
 	}
-	if strings.TrimSpace(status) == "" {
-		return "clean"
+
+	// Check for working tree cleanliness
+	for _, line := range lines[1:] {
+		if strings.TrimSpace(line) != "" {
+			return "dirty" // If any line after the branch info contains data, the repo is dirty
+		}
 	}
-	return "dirty"
+
+	return "clean" // If no issues found, the repo is clean
 }
 
-func pollRepositories(config Config) []RepoState {
+func pollRepositories() []RepoState {
+	configLock.RLock()
+	currentConfig := config
+	configLock.RUnlock()
+
 	states := []RepoState{}
-	for _, repo := range config.Repositories {
+	for _, repo := range currentConfig.Repositories {
 		state := getRepoState(repo)
 		states = append(states, RepoState{
 			Name:  repo.Name,
@@ -73,23 +113,30 @@ func getOverallState(states []RepoState) string {
 }
 
 func main() {
-	configFile, err := os.Open("config.json")
-	if err != nil {
-		fmt.Println("Error opening config file:", err)
-		os.Exit(1)
-	}
-	defer configFile.Close()
+	userHome := os.Getenv("HOME")
+	configFileName := filepath.Join(userHome, ".local", "share", "repowatcher", "config.json")
+	configPath := configFileName
 
-	var config Config
-	decoder := json.NewDecoder(configFile)
-	err = decoder.Decode(&config)
-	if err != nil {
-		fmt.Println("Error decoding config file:", err)
+	if err := loadConfig(configPath); err != nil {
+		fmt.Println("Error loading config file:", err)
 		os.Exit(1)
 	}
+
+	// Handle SIGHUP for reloading configuration
+	reloadChan := make(chan os.Signal, 1)
+	signal.Notify(reloadChan, syscall.SIGHUP)
+	go func() {
+		for range reloadChan {
+			if err := loadConfig(configPath); err != nil {
+				fmt.Println("Error reloading config file:", err)
+			} else {
+				fmt.Println("Configuration reloaded.")
+			}
+		}
+	}()
 
 	for {
-		states := pollRepositories(config)
+		states := pollRepositories()
 		overallState := getOverallState(states)
 
 		// Output for Waybar
@@ -100,6 +147,9 @@ func main() {
 		jsonOutput, _ := json.Marshal(output)
 		fmt.Println(string(jsonOutput))
 
-		time.Sleep(time.Duration(config.PollInterval) * time.Second)
+		configLock.RLock()
+		interval := config.PollInterval
+		configLock.RUnlock()
+		time.Sleep(time.Duration(interval) * time.Second)
 	}
 }
