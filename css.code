@@ -1,9 +1,9 @@
-#custom-git-repo-watcher {
+#custom-git-repowatcher {
   color: green; /* Default to green */
 }
-#custom-git-repo-watcher.red {
+#custom-git-repowatcher.red {
   color: red;
 }
-#custom-git-repo-watcher.yellow {
+#custom-git-repowatcher.yellow {
   color: yellow;
 }
