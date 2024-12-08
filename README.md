@@ -1,5 +1,8 @@
 # Repowatcher
-A Tool written in Golang that displays the status of your local repos in Waybar.
+A Tool written in Golang that displays the status of your local repos in Waybar.  At a glance you can see if any of your repositories
+need updated or pushed.
+
+This was developed and tested in Fedora Workstation 41 using Hyprland.
 
 ## Installation
 
@@ -10,19 +13,23 @@ A Tool written in Golang that displays the status of your local repos in Waybar.
 
 ### Building
 
-Build the binary with
+Build the binary with these steps:
 
 ```
 git clone https://github.com/scqcasc/repowatcher.git
 cd repowatcher
 go build
-cp ~/.local/bin/repowatcher
+cp repowatcher ~/.local/bin/repowatcher
 ```
 
 
 
 ### Configuration
 Copy the sample.config.json to ~/.local/share/repowatcher/config.json.
+```
+mkdir -p ~/.local/share/repowatcher
+cp sample.config.json ~/.local/share/repowatcher/config.json
+```
 Update it with the repos you want to watch.
 
 The config structure is
@@ -50,6 +57,12 @@ Update your waybar config
         "format": "Repos: {}"
     },
 ```
+Add the module somewhere in your Waybar:
+
+```
+"modules-right": ["custom/spotify", "custom/git-repowatcher",  "custom/weather",  "network", "cpu", "tray", "clock","pulseaudio","battery", "custom/power"],
+```
+
 * Add css styling:
 ```
 #custom-git-repowatcher {
