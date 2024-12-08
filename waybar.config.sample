@@ -1,6 +1,6 @@
 "custom/git-repo-watcher": {
     "exec": "/usr/bin/repowatcher",
     "interval": 1,
-    "format": "{text}",
+    "format": "Repos",
     "tooltip": true
 }

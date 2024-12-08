@@ -56,7 +56,7 @@ Update your waybar config
         "interval": 10,
         "tooltip": true,
         "return-type": "json",
-        "format": "Repos: {}"
+        "format": "Repos"
     },
 ```
 Add the module somewhere in your Waybar:
