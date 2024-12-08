@@ -13,21 +13,6 @@ import (
 	"time"
 )
 
-type Repository struct {
-	Name string `json:"name"`
-	Path string `json:"location"`
-}
-
-type Config struct {
-	Repositories []Repository `json:"repositories"`
-	Interval     int          `json:"interval"`
-}
-
-type RepoState struct {
-	Name  string `json:"name"`
-	State string `json:"state"`
-}
-
 var configPath string
 var onceMode bool
 
@@ -132,9 +117,11 @@ func generateOutput(states []RepoState) {
 
 	output := struct {
 		Text    string `json:"text"`
+		Class   string `json:"class"`
 		Tooltip string `json:"tooltip"` // Changed to string
 	}{
 		Text:    status,
+		Class:   status,
 		Tooltip: strings.Join(tooltips, "\n"), // Combine array into a single string
 	}
 
