@@ -117,30 +117,38 @@ func checkRepositories(repos []Repository) []RepoState {
 	return states
 }
 
-func generateOutput(states []RepoState) string {
+func generateOutput(states []RepoState) {
 	status := "green"
+	var tooltips []string
+
 	for _, state := range states {
 		if state.State == "dirty" {
 			status = "red"
-			break
-		} else if state.State == "ahead" {
+		} else if state.State == "ahead" && status != "red" {
 			status = "yellow"
 		}
+		tooltips = append(tooltips, fmt.Sprintf("%s: %s", state.Name, state.State))
 	}
+
 	output := struct {
-		Text    string      `json:"text"`
-		Tooltip []RepoState `json:"tooltip"`
+		Text    string `json:"text"`
+		Tooltip string `json:"tooltip"` // Changed to string
 	}{
 		Text:    status,
-		Tooltip: states,
+		Tooltip: strings.Join(tooltips, "\n"), // Combine array into a single string
 	}
-	result, _ := json.Marshal(output)
-	return string(result)
+
+	jsonOutput, err := json.Marshal(output)
+	if err != nil {
+		log.Fatalf("Failed to marshal JSON: %v", err)
+	}
+
+	fmt.Println(string(jsonOutput))
 }
 
 func checkRepositoriesAndOutput(config Config) {
 	states := checkRepositories(config.Repositories)
-	fmt.Println(generateOutput(states))
+	generateOutput(states) // Already prints valid JSON
 }
 
 func main() {
