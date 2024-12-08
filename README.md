@@ -4,7 +4,7 @@ need updated or pushed.
 
 This was developed and tested in Fedora Workstation 41 using Hyprland.
 
-This can run in a daemon mode, but for Waybar you can run it with the -once flag to have Waybar manage the re-runs.
+This can run in a daemon mode, but for Waybar you can run it with the --once flag to have Waybar manage the re-runs.
 
 ## Installation
 
