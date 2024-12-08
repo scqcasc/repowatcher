@@ -103,16 +103,20 @@ func checkRepositories(repos []Repository) []RepoState {
 }
 
 func generateOutput(states []RepoState) {
+	color := "green" // Default color
 	status := "green"
 	var tooltips []string
 
 	for _, state := range states {
 		if state.State == "dirty" {
+			color = "red"
 			status = "red"
 		} else if state.State == "ahead" && status != "red" {
+			color = "yellow"
 			status = "yellow"
 		}
-		tooltips = append(tooltips, fmt.Sprintf("%s: %s", state.Name, state.State))
+		// Add HTML for the tooltip with colored text
+		tooltips = append(tooltips, fmt.Sprintf(`<span foreground="%s">%s: %s</span>`, color, state.Name, state.State))
 	}
 
 	output := struct {
