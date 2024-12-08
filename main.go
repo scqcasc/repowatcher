@@ -15,7 +15,7 @@ import (
 
 type Repository struct {
 	Name string `json:"name"`
-	Path string `json:"path"`
+	Path string `json:"location"`
 }
 
 type Config struct {
