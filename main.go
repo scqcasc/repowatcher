@@ -108,13 +108,20 @@ func generateOutput(states []RepoState) {
 	var tooltips []string
 
 	for _, state := range states {
-		if state.State == "dirty" {
+		switch state.State {
+		case "dirty":
 			color = "red"
 			status = "red"
-		} else if state.State == "ahead" && status != "red" {
+		case "ahead":
+			if status != "red" {
+				status = "yellow" // Override to yellow if not already red
+			}
 			color = "yellow"
-			status = "yellow"
+		case "clean":
+			color = "green"
+
 		}
+
 		// Add HTML for the tooltip with colored text
 		tooltips = append(tooltips, fmt.Sprintf(`<span foreground="%s">%s: %s</span>`, color, state.Name, state.State))
 	}
