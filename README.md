@@ -82,3 +82,6 @@ Inform waybar about it's new configuration:
 ```
 killall -SIGUSR2 waybar
 ```
+
+## TODO
+Add need to pull notification
