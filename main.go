@@ -2,154 +2,152 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 )
 
-// Repository represents a git repository configuration
 type Repository struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
+	Name string `json:"name"`
+	Path string `json:"path"`
 }
 
-// RepoState represents the state of a repository
+type Config struct {
+	Repositories []Repository `json:"repositories"`
+	Interval     int          `json:"interval"`
+}
+
 type RepoState struct {
 	Name  string `json:"name"`
 	State string `json:"state"`
 }
 
-// Config holds the application configuration
-type Config struct {
-	Repositories []Repository `json:"repositories"`
-	PollInterval int          `json:"poll_interval"`
+var configPath string
+var onceMode bool
+
+func init() {
+	// Default config path
+	defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".local", "share", "repowatcher", "config.json")
+	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
+	flag.BoolVar(&onceMode, "once", false, "Run a single check and exit")
+	flag.Parse()
 }
 
-var (
-	config     Config
-	configLock sync.RWMutex
-)
-
-func loadConfig(configPath string) error {
-	file, err := os.Open(configPath)
+func loadConfig(filePath string) Config {
+	absPath, err := filepath.Abs(filePath)
 	if err != nil {
-		return err
+		log.Fatalf("Failed to resolve absolute path for config file: %v", err)
+	}
+
+	file, err := os.Open(absPath)
+	if err != nil {
+		log.Fatalf("Failed to open config file: %v", err)
 	}
 	defer file.Close()
 
-	var newConfig Config
+	var config Config
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&newConfig); err != nil {
-		return err
+	if err := decoder.Decode(&config); err != nil {
+		log.Fatalf("Failed to parse config file: %v", err)
 	}
 
-	configLock.Lock()
-	config = newConfig
-	configLock.Unlock()
-	return nil
+	// Ensure all repository paths are absolute
+	for i := range config.Repositories {
+		config.Repositories[i].Path = resolveAbsolutePath(config.Repositories[i].Path)
+	}
+
+	return config
+}
+
+func resolveAbsolutePath(repoPath string) string {
+	absPath, err := filepath.Abs(repoPath)
+	if err != nil {
+		log.Fatalf("Failed to resolve absolute path for repository path %s: %v", repoPath, err)
+	}
+	return absPath
 }
 
 func getRepoState(repo Repository) string {
-	cmd := exec.Command("git", "status", "--porcelain=v1", "--branch")
-	cmd.Dir = repo.Location
+	cmd := exec.Command("git", "-C", repo.Path, "status", "--porcelain", "-b")
 	output, err := cmd.Output()
 	if err != nil {
+		log.Printf("Error checking repository %s: %v", repo.Name, err)
 		return "error"
 	}
-
 	status := string(output)
-	lines := strings.Split(status, "\n")
 
-	// Check for branch ahead/behind state
-	if len(lines) > 0 && strings.Contains(lines[0], "ahead") {
+	if strings.Contains(status, "ahead") {
 		return "ahead"
 	}
-	if len(lines) > 0 && strings.Contains(lines[0], "behind") {
+	if strings.Contains(status, "behind") {
 		return "behind"
 	}
-
-	// Check for working tree cleanliness
-	for _, line := range lines[1:] {
-		if strings.TrimSpace(line) != "" {
-			return "dirty" // If any line after the branch info contains data, the repo is dirty
-		}
+	if strings.TrimSpace(status) == "" {
+		return "clean"
 	}
-
-	return "clean" // If no issues found, the repo is clean
+	return "dirty"
 }
 
-func pollRepositories() []RepoState {
-	configLock.RLock()
-	currentConfig := config
-	configLock.RUnlock()
+func checkRepositories(repos []Repository) []RepoState {
+	var wg sync.WaitGroup
+	states := make([]RepoState, len(repos))
 
-	states := []RepoState{}
-	for _, repo := range currentConfig.Repositories {
-		state := getRepoState(repo)
-		states = append(states, RepoState{
-			Name:  repo.Name,
-			State: state,
-		})
+	for i, repo := range repos {
+		wg.Add(1)
+		go func(i int, repo Repository) {
+			defer wg.Done()
+			states[i] = RepoState{Name: repo.Name, State: getRepoState(repo)}
+		}(i, repo)
 	}
+	wg.Wait()
 	return states
 }
 
-func getOverallState(states []RepoState) string {
+func generateOutput(states []RepoState) string {
+	status := "green"
 	for _, state := range states {
 		if state.State == "dirty" {
-			return "red"
-		}
-		if state.State == "ahead" {
-			return "yellow"
+			status = "red"
+			break
+		} else if state.State == "ahead" {
+			status = "yellow"
 		}
 	}
-	return "green"
+	output := struct {
+		Text    string      `json:"text"`
+		Tooltip []RepoState `json:"tooltip"`
+	}{
+		Text:    status,
+		Tooltip: states,
+	}
+	result, _ := json.Marshal(output)
+	return string(result)
+}
+
+func checkRepositoriesAndOutput(config Config) {
+	states := checkRepositories(config.Repositories)
+	fmt.Println(generateOutput(states))
 }
 
 func main() {
-	userHome := os.Getenv("HOME")
-	configFileName := filepath.Join(userHome, ".local", "share", "repowatcher", "config.json")
-	configPath := configFileName
+	// Load configuration
+	config := loadConfig(configPath)
 
-	if err := loadConfig(configPath); err != nil {
-		fmt.Println("Error loading config file:", err)
-		os.Exit(1)
+	if onceMode {
+		// Run once and exit
+		checkRepositoriesAndOutput(config)
+		return
 	}
 
-	// Handle SIGHUP for reloading configuration
-	reloadChan := make(chan os.Signal, 1)
-	signal.Notify(reloadChan, syscall.SIGHUP)
-	go func() {
-		for range reloadChan {
-			if err := loadConfig(configPath); err != nil {
-				fmt.Println("Error reloading config file:", err)
-			} else {
-				fmt.Println("Configuration reloaded.")
-			}
-		}
-	}()
-
+	// Daemon mode
 	for {
-		states := pollRepositories()
-		overallState := getOverallState(states)
-
-		// Output for Waybar
-		output := map[string]interface{}{
-			"text":    overallState,
-			"tooltip": states,
-		}
-		jsonOutput, _ := json.Marshal(output)
-		fmt.Println(string(jsonOutput))
-
-		configLock.RLock()
-		interval := config.PollInterval
-		configLock.RUnlock()
-		time.Sleep(time.Duration(interval) * time.Second)
+		checkRepositoriesAndOutput(config)
+		time.Sleep(time.Duration(config.Interval) * time.Second)
 	}
 }
