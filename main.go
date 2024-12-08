@@ -74,24 +74,32 @@ func resolveAbsolutePath(repoPath string) string {
 }
 
 func getRepoState(repo Repository) string {
-	cmd := exec.Command("git", "-C", repo.Path, "status", "--porcelain", "-b")
+	cmd := exec.Command("git", "status", "--porcelain=v1", "--branch")
+	cmd.Dir = repo.Path
 	output, err := cmd.Output()
 	if err != nil {
-		log.Printf("Error checking repository %s: %v", repo.Name, err)
 		return "error"
 	}
-	status := string(output)
 
-	if strings.Contains(status, "ahead") {
+	status := string(output)
+	lines := strings.Split(status, "\n")
+
+	// Check for branch ahead/behind state
+	if len(lines) > 0 && strings.Contains(lines[0], "ahead") {
 		return "ahead"
 	}
-	if strings.Contains(status, "behind") {
+	if len(lines) > 0 && strings.Contains(lines[0], "behind") {
 		return "behind"
 	}
-	if strings.TrimSpace(status) == "" {
-		return "clean"
+
+	// Check for working tree cleanliness
+	for _, line := range lines[1:] {
+		if strings.TrimSpace(line) != "" {
+			return "dirty" // If any line after the branch info contains data, the repo is dirty
+		}
 	}
-	return "dirty"
+
+	return "clean" // If no issues found, the repo is clean
 }
 
 func checkRepositories(repos []Repository) []RepoState {
