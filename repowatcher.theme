@@ -1,0 +1,65 @@
+
+
+/* Rofi Dark Mode with Rounded Corners and Icons */
+* {
+    background-color:  rgba(34, 40, 49, 1);  /* #222831 */
+    foreground-color:  rgba(238, 238, 238, 1);  /* #eeeeee */
+    selected-background-color: rgba(57, 62, 70, 1);  /* #393e46 */
+    selected-foreground-color: rgba(0, 173, 181, 1);  /* #00adb5 */
+    border-color: rgba(57, 62, 70, 1);  /* #393e46 */
+    font: "Fira Code 12";  /* Set your preferred font */
+    show-icons: true;      /* Enable icons */
+}
+
+/* Window Configuration */
+window {
+    padding: 10px;          
+    background-color: rgba(34, 40, 49, 1); 
+    border: 1px ; 
+
+    shadow: true;           
+}
+
+/* Listview Configuration */
+listview {
+    spacing: 5px;           
+    padding: 10px;          
+    fixed-height: false;    
+}
+
+/* Elements (List Items) */
+element {
+    border-radius: 8px;     
+    background-color: transparent;
+    foreground-color: rgba(238, 238, 238, 1);
+    padding: 5px 10px;
+}
+
+element selected {
+    background-color: rgba(57, 62, 70, 1); 
+    foreground-color: rgba(0, 173, 181, 1);  
+    border-radius: 8px;
+    font: "Fira Code Bold 12";  
+}
+
+/* Scrollbar (Optional, for long lists) */
+scrollbar {
+    width: 6px;
+    handle-width: 6px;
+    border-radius: 3px;
+    background-color: rgba(57, 62, 70, 1);
+    handle-color: rgba(0, 173, 181, 1);
+}
+
+/* Input Box (Search Field) */
+textbox {
+    foreground-color: rgba(238, 238, 238, 1);
+    background-color: rgba(34, 40, 49, 1);
+    padding: 5px 10px;
+}
+
+/* Icons (if show-icons is enabled) */
+icon {
+    size: 16px;            
+    foreground-color: rgba(0, 173, 181, 1);
+}
