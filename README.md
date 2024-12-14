@@ -15,7 +15,7 @@ This can run in a daemon mode, but for Waybar you can run it with the --once fla
 * Git tools installed
 * Waybar >= 0.11
 * Rofi >= 1.7.5
-
+* Lazygit
 
 ### Building
 
