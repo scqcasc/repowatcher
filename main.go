@@ -16,10 +16,12 @@ import (
 var configPath string
 var onceMode bool
 var listReposMode bool
+var rofiMode bool
 
 func init() {
 	// Default config path
 	defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".local", "share", "repowatcher", "config.json")
+	flag.BoolVar(&rofiMode, "rofi", false, "Output repositories formatted for Rofi")
 	flag.BoolVar(&listReposMode, "list-repos", false, "List repositories")
 	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
 	flag.BoolVar(&onceMode, "once", false, "Run a single check and exit")
@@ -50,6 +52,23 @@ func loadConfig(filePath string) Config {
 	}
 
 	return config
+}
+
+func generateRofiOutput(states []RepoState) string {
+	var output []string
+	for _, state := range states {
+		color := ""
+		switch state.State {
+		case "clean":
+			color = "green"
+		case "ahead":
+			color = "yellow"
+		case "dirty":
+			color = "red"
+		}
+		output = append(output, fmt.Sprintf("<span foreground='%s'>%s: %s</span>", color, state.Name, state.State))
+	}
+	return strings.Join(output, "\n")
 }
 
 func resolveAbsolutePath(repoPath string) string {
@@ -194,6 +213,12 @@ func main() {
 	if onceMode {
 		// Run once and exit
 		checkRepositoriesAndOutput(config)
+		return
+	}
+
+	if rofiMode {
+		states := checkRepositories(config.Repositories)
+		fmt.Println(generateRofiOutput(states))
 		return
 	}
 

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Get the repository path from the config
+CONFIG_FILE="$HOME/.local/share/repowatcher/config.json"
+TERMINAL=kitty
+LAZYGIT=~/go/bin/lazygit
+env > /tmp/waybar_env.txt
+# Get the list of repositories
+REPO=$(~/.local/bin/repowatcher --rofi | rofi -dmenu -markup-rows -p "Select Repository"|sed -e "s/<.*'>//g")
+REPO=$(echo $REPO|awk -F: '{print $1}')
+
+if [[ -z "$REPO" ]]; then
+    exit 0
+fi
+
+REPO_PATH=$(jq -r --arg name "$REPO" '.repositories[] | select(.name == $name) | .location' "$CONFIG_FILE")
+
+# check if there is a valid path to the repo
+if [[ -z "$REPO_PATH" ]]; then
+    echo "Repository $REPO not found." >> /tmp/repowatcher-handler.log
+    exit 1
+fi
+
+
+# Launch lazygit in the selected repo
+$TERMINAL -- bash -c "cd '$REPO_PATH' && $LAZYGIT"
+
