@@ -4,10 +4,17 @@
 CONFIG_FILE="$HOME/.local/share/repowatcher/config.json"
 TERMINAL=kitty
 LAZYGIT=~/go/bin/lazygit
-env > /tmp/waybar_env.txt
+
+# used for testing
+#env > /tmp/waybar_env.txt
+
 # Get the list of repositories
 REPO=$(~/.local/bin/repowatcher --rofi | rofi -dmenu -markup-rows -p "Select Repository"|sed -e "s/<.*'>//g")
 REPO=$(echo $REPO|awk -F: '{print $1}')
+REPO=$(echo $REPO|awk '{print $2}')
+
+# used for testing
+#echo $REPO
 
 if [[ -z "$REPO" ]]; then
     exit 0
