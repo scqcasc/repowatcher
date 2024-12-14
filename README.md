@@ -61,7 +61,8 @@ Update your waybar config
         "interval": 10,
         "tooltip": true,
         "return-type": "json",
-        "format": "Repos"
+        "format": "Repos",
+        "on-click": "~/.local/bin/repowatcher-handler"
     },
 ```
 Add the module somewhere in your Waybar:
