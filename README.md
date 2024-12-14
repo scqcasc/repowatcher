@@ -22,6 +22,7 @@ git clone https://github.com/scqcasc/repowatcher.git
 cd repowatcher
 go build
 cp repowatcher ~/.local/bin/repowatcher
+cp repowatcher-handler ~/.local/bin/repowatcher-handler
 ```
 
 
