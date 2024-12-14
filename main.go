@@ -15,10 +15,12 @@ import (
 
 var configPath string
 var onceMode bool
+var listReposMode bool
 
 func init() {
 	// Default config path
 	defaultConfigPath := filepath.Join(os.Getenv("HOME"), ".local", "share", "repowatcher", "config.json")
+	flag.BoolVar(&listReposMode, "list-repos", false, "List repositories")
 	flag.StringVar(&configPath, "config", defaultConfigPath, "Path to configuration file")
 	flag.BoolVar(&onceMode, "once", false, "Run a single check and exit")
 	flag.Parse()
@@ -149,8 +151,44 @@ func checkRepositoriesAndOutput(config Config) {
 	generateOutput(states) // Already prints valid JSON
 }
 
+func handleOnClick(repoName string) {
+	config := loadConfig(configPath)
+	for _, repo := range config.Repositories {
+		if repo.Name == repoName {
+			cmd := exec.Command("kitty", "--", "bash", "-c", fmt.Sprintf("cd '%s' && lazygit", repo.Path))
+			err := cmd.Start()
+			if err != nil {
+				log.Fatalf("Failed to launch terminal: %v", err)
+			}
+			return
+		}
+	}
+	log.Printf("Repository not found: %s", repoName)
+}
+
+func listRepos(config Config) {
+	for _, repo := range config.Repositories {
+		fmt.Println(repo.Name)
+	}
+}
+
 func main() {
+
+	if listReposMode {
+		config := loadConfig(configPath)
+		listRepos(config)
+		return
+	}
 	// Load configuration
+	var onClickRepo string
+	flag.StringVar(&onClickRepo, "on-click", "", "Handle click event for a specific repository")
+	flag.Parse()
+
+	if onClickRepo != "" {
+		handleOnClick(onClickRepo)
+		return
+	}
+
 	config := loadConfig(configPath)
 
 	if onceMode {
