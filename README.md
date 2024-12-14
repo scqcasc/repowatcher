@@ -90,4 +90,5 @@ killall -SIGUSR2 waybar
 ```
 
 ## Let's See it in Action
-![](repowatch.mp4)
+(smaller video coming soon ...)
+[![Repowatch in action]({https://github.com/scqcasc/repowatcher/blob/main/repowatcher.mp4)}]({https://github.com/scqcasc/repowatcher/blob/main/repowatcher.mp4} "Repowatch")
