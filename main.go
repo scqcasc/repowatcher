@@ -70,7 +70,7 @@ func generateRofiOutput(states []RepoState) string {
 			color = "red"
 			icon = "⚠️" // Warning symbol for dirty
 		}
-		output = append(output, fmt.Sprintf("<span foreground='%s'>%s %s: %s</span>", color, icon, state.Name, state.State))
+		output = append(output, fmt.Sprintf("<span foreground='%s'>%s %s </span>", color, icon, state.Name))
 	}
 	return strings.Join(output, "\n")
 }
