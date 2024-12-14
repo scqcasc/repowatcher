@@ -57,16 +57,21 @@ func loadConfig(filePath string) Config {
 func generateRofiOutput(states []RepoState) string {
 	var output []string
 	for _, state := range states {
-		color := ""
+		var color string
+		var icon str
 		switch state.State {
 		case "clean":
 			color = "green"
+			icon = "✔️" // Checkmark for clean
 		case "ahead":
 			color = "yellow"
+			icon = "🔼" // Up arrow for ahead
 		case "dirty":
 			color = "red"
+			icon = "⚠️" // Warning symbol for dirty
 		}
 		output = append(output, fmt.Sprintf("<span foreground='%s'>%s: %s</span>", color, state.Name, state.State))
+
 	}
 	return strings.Join(output, "\n")
 }
