@@ -16,7 +16,7 @@ window {
     padding: 10px;          
     background-color: rgba(34, 40, 49, 1); 
     border: 1px ; 
-
+    height: 500px;
     shadow: true;           
 }
 
