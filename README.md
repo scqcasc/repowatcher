@@ -2,6 +2,8 @@
 A Tool written in Golang that displays the status of your local repos in Waybar.  At a glance you can see if any of your repositories
 need updated or pushed.
 
+When you click the Repos lable it opens a Rofi window allowing you to select the repo you want to update.
+
 This was developed and tested in Fedora Workstation 41 using Hyprland.
 
 This can run in a daemon mode, but for Waybar you can run it with the --once flag to have Waybar manage the re-runs.
@@ -12,6 +14,8 @@ This can run in a daemon mode, but for Waybar you can run it with the --once fla
 * Golang 1.23.3
 * Git tools installed
 * Waybar >= 0.11
+* Rofi >= 1.7.5
+
 
 ### Building
 

@@ -148,7 +148,7 @@ func generateOutput(states []RepoState) {
 		}
 
 		// Add HTML for the tooltip with colored text
-		tooltips = append(tooltips, fmt.Sprintf(`<span foreground="%s">%s: %s</span>`, color, state.Name, state.State))
+		tooltips = append(tooltips, fmt.Sprintf(`<span foreground="%s">%s</span>`, color, state.Name))
 	}
 
 	output := struct {
