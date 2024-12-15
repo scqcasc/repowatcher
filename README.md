@@ -25,6 +25,9 @@ Build the binary with these steps:
 git clone https://github.com/scqcasc/repowatcher.git
 cd repowatcher
 go build
+mkdir -p ~/.local/share/repowatcher
+cp sample.config.json ~/.local/share/repowatcher/config.json
+cp repowatcher.theme ~/.local/share/repowatcher/repowatcher.theme
 cp repowatcher ~/.local/bin/repowatcher
 cp repowatcher-handler ~/.local/bin/repowatcher-handler
 ```
@@ -32,12 +35,7 @@ cp repowatcher-handler ~/.local/bin/repowatcher-handler
 
 
 ### Configuration
-Copy the sample.config.json to ~/.local/share/repowatcher/config.json.
-```
-mkdir -p ~/.local/share/repowatcher
-cp sample.config.json ~/.local/share/repowatcher/config.json
-```
-Update it with the repos you want to watch.
+Update ~/.local/share/repowatcher/config.json.
 
 The config structure is
 ```
