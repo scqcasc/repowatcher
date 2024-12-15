@@ -11,11 +11,11 @@ This can run in a daemon mode, but for Waybar you can run it with the --once fla
 ## Installation
 
 ### Requirements
-* Golang 1.23.3
-* Git tools installed
-* Waybar >= 0.11
-* Rofi >= 1.7.5
-* Lazygit
+* [Golang >= 1.23.3](https://go.dev/)
+* Git
+* [Waybar >= 0.11](https://github.com/Alexays/Waybar)
+* [Rofi >= 1.7.5](https://github.com/davatorium/rofi)
+* [Lazygit](https://github.com/jesseduffield/lazygit)
 
 ### Building
 
